@@ -1,76 +1,70 @@
 import Controls from "./controls";
 
-export default class Car {
-    body: MatterJS.BodyType;
+export default class Car extends Phaser.GameObjects.Rectangle {
+    shape: Phaser.GameObjects.Rectangle;
+    collider: MatterJS.BodyType;
 
-    vel: number;
-    acceleration: number;
-    maxSpeed: number;
-    friction: number;
+    speed: number = 0;
+    acceleration: number = 2;
+    maxSpeed: number = 200;
+    friction: number = 0.8;
 
-    angularVel: number;
-    angle: number;
+    angularVel: number = 1.5;
 
     controls: Controls;
-    constructor(scene: Phaser.Scene, x: number, y: number, width: number, height: number) {
-        this.body = scene.matter.add.rectangle(x, y, width, height);
-        this.vel = 0;
-        this.acceleration = 20;
-        this.maxSpeed = 300;
-        this.friction = 5;
-
-        this.angularVel = 2;
-        this.angle = 0;
-
+    constructor(scene: Phaser.Scene, x: number, y: number, width: number, height: number, colour: number) {
+        super(scene, x, y, width, height, colour);
+        this.collider = scene.matter.add.rectangle(x, y, width, height, {
+            isSensor: true,
+            friction: 1,
+            frictionAir: 1,
+        });
         this.controls = new Controls();
-        console.log(this.body);
-        this.body.velocity = { x: 0, y: -100 };
-        this.body.speed = 10;
     }
 
     update(delta: number) {
-        if (this.controls.forward) {
-            this.vel += this.acceleration;
-        }
-        if (this.controls.reverse) {
-            this.vel -= this.acceleration;
-        }
-
-        if (this.vel != 0) {
-            const flip = this.vel > 0 ? 1 : -1;
-            if (this.controls.left) {
-                this.angle += this.angularVel * delta * flip;
-            }
-
-            if (this.controls.right) {
-                this.angle -= this.angularVel * delta * flip;
-            }
-        }
-
-        this.vel = this.vel > 0 ? Math.min(this.vel, this.maxSpeed) : Math.max(this.vel, -this.maxSpeed / 2);
-
-        if (Math.abs(this.vel) <= this.friction) this.vel = 0;
-
-        // this.body.setVelocity(Math.sin(this.angle) * this.vel, Math.cos(this.angle) * this.vel);
-
-        // this.x -= Math.sin(this.angle) * this.vel * delta;
-        // this.y -= Math.cos(this.angle) * this.vel * delta;
-
-        // this.setVelocity(Math.sin(this.angle) * this.vel, Math.cos(this.angle) * this.vel);
-        // this.body.velocity = { x: Math.sin(this.angle) * this.vel, y: Math.cos(this.angle) * this.vel };
-
-        // this.body.position = { x: 200, y: 500 };
-        this.body.velocity = { x: 0, y: -100 };
-        // this.body.speed = 10;
+        this.#move(delta);
     }
 
-    draw(g: any) {
-        return;
-        // g.save();
-        // g.translateCanvas(this.x, this.y);
-        // g.rotateCanvas(-this.angle);
-        // g.fillStyle(Color("blue").rgbNumber());
-        // g.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
-        // g.restore();
+    #move(delta: number) {
+        if (this.controls.forward) {
+            this.speed += this.acceleration;
+        }
+        if (this.controls.reverse) {
+            this.speed -= this.acceleration;
+        }
+
+        if (this.speed > this.maxSpeed) {
+            this.speed = this.maxSpeed;
+        }
+        if (this.speed < -this.maxSpeed / 2) {
+            this.speed = -this.maxSpeed / 2;
+        }
+
+        if (this.speed > 0) {
+            this.speed -= this.friction;
+        }
+        if (this.speed < 0) {
+            this.speed += this.friction;
+        }
+        if (Math.abs(this.speed) < this.friction) {
+            this.speed = 0;
+        }
+
+        if (this.speed != 0) {
+            const flip = this.speed > 0 ? -1 : 1;
+            if (this.controls.left) {
+                this.rotation += this.angularVel * flip * delta;
+            }
+            if (this.controls.right) {
+                this.rotation -= this.angularVel * flip * delta;
+            }
+        }
+
+        this.x += Math.sin(this.rotation) * this.speed * delta;
+        this.y -= Math.cos(this.rotation) * this.speed * delta;
+
+        this.collider.position = { x: this.x, y: this.y };
+        this.collider.angle = this.rotation;
     }
 }

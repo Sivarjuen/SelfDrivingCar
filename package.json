@@ -18,12 +18,13 @@
         "build": "vite build --config vite/config.prod.js"
     },
     "devDependencies": {
+        "@types/color": "^3.0.6",
+        "color": "^4.2.3",
         "terser": "^5.27.0",
         "typescript": "^5.2.2",
         "vite": "^5.0.8"
     },
     "dependencies": {
-        "color": "^4.2.3",
         "phaser": "^3.70.0"
     }
 }
