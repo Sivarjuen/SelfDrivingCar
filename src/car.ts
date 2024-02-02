@@ -1,4 +1,6 @@
 import Controls from "./controls";
+import Sensor from "./sensor";
+import { Segment } from "./types";
 
 export default class Car extends Phaser.GameObjects.Rectangle {
     shape: Phaser.GameObjects.Rectangle;
@@ -6,13 +8,21 @@ export default class Car extends Phaser.GameObjects.Rectangle {
 
     speed: number = 0;
     acceleration: number = 2;
-    maxSpeed: number = 200;
+    maxSpeed: number = 300;
     friction: number = 0.8;
 
     angularVel: number = 1.5;
 
     controls: Controls;
-    constructor(scene: Phaser.Scene, x: number, y: number, width: number, height: number, colour: number) {
+    sensors: Sensor;
+    constructor(
+        scene: Phaser.Scene,
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+        colour: number
+    ) {
         super(scene, x, y, width, height, colour);
         this.collider = scene.matter.add.rectangle(x, y, width, height, {
             isSensor: true,
@@ -20,10 +30,12 @@ export default class Car extends Phaser.GameObjects.Rectangle {
             frictionAir: 1,
         });
         this.controls = new Controls();
+        this.sensors = scene.add.existing(new Sensor(scene, this));
     }
 
-    update(delta: number) {
+    update(delta: number, roadBorders: Segment[]) {
         this.#move(delta);
+        this.sensors.update(roadBorders);
     }
 
     #move(delta: number) {
