@@ -1,4 +1,4 @@
-import { IntersectionPoint, Segment } from "./types";
+import { IntersectionPoint, Point, Segment } from "./types";
 
 export function lerp(a: number, b: number, t: number): number {
     return a + (b - a) * t;
@@ -41,8 +41,6 @@ export function getIntersection(
     const [A, B] = s1;
     const [C, D] = s2;
 
-    console.log(A, B, C, D);
-
     const tTop = (D.x - C.x) * (A.y - C.y) - (D.y - C.y) * (A.x - C.x);
     const uTop = (C.y - A.y) * (A.x - B.x) - (C.x - A.x) * (A.y - B.y);
     const bottom = (D.y - C.y) * (B.x - A.x) - (D.x - C.x) * (B.y - A.y);
@@ -58,4 +56,18 @@ export function getIntersection(
             };
         }
     }
+}
+
+export function polysIntersect(p1: Point[], p2: Point[]): boolean {
+    for (let i = 0; i < p1.length; i++) {
+        for (let j = 0; j < p2.length; j++) {
+            const touch = getIntersection(
+                [p1[i], p1[(i + 1) % p1.length]],
+                [p2[j], p2[(j + 1) % p2.length]]
+            );
+
+            if (touch) return true;
+        }
+    }
+    return false;
 }

@@ -21,7 +21,7 @@ export class Game extends Scene {
             new Road(
                 this,
                 this.cameras.main.width / 2,
-                this.cameras.main.width * 0.95,
+                this.cameras.main.width * 0.9,
                 LANES
             )
         );

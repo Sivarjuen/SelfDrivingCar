@@ -1,17 +1,19 @@
+import Color from "color";
 import Controls from "./controls";
 import Sensor from "./sensor";
-import { Segment } from "./types";
+import { Point, Segment } from "./types";
+import { polysIntersect } from "./util";
 
 export default class Car extends Phaser.GameObjects.Rectangle {
     shape: Phaser.GameObjects.Rectangle;
-    collider: MatterJS.BodyType;
 
-    speed: number = 0;
-    acceleration: number = 2;
-    maxSpeed: number = 300;
-    friction: number = 0.8;
-
-    angularVel: number = 1.5;
+    speed = 0;
+    acceleration = 2;
+    maxSpeed = 300;
+    friction = 0.8;
+    angularVel = 1.5;
+    damaged = false;
+    initColour: number;
 
     controls: Controls;
     sensors: Sensor;
@@ -24,18 +26,35 @@ export default class Car extends Phaser.GameObjects.Rectangle {
         colour: number
     ) {
         super(scene, x, y, width, height, colour);
-        this.collider = scene.matter.add.rectangle(x, y, width, height, {
-            isSensor: true,
-            friction: 1,
-            frictionAir: 1,
-        });
+        this.initColour = colour;
         this.controls = new Controls();
         this.sensors = scene.add.existing(new Sensor(scene, this));
     }
 
     update(delta: number, roadBorders: Segment[]) {
         this.#move(delta);
+        const damagedThisFrame = this.#assessDamage(roadBorders);
+        if (this.damaged != damagedThisFrame) {
+            this.damaged = damagedThisFrame;
+            this.fillColor = this.damaged
+                ? Color("red").rgbNumber()
+                : this.initColour;
+        }
+
         this.sensors.update(roadBorders);
+    }
+
+    #assessDamage(roadBorders: Segment[]) {
+        const polyPoints: Point[] = [
+            { x: this.getTopLeft().x!, y: this.getTopLeft().y! },
+            { x: this.getTopRight().x!, y: this.getTopRight().y! },
+            { x: this.getBottomRight().x!, y: this.getBottomRight().y! },
+            { x: this.getBottomLeft().x!, y: this.getBottomLeft().y! },
+        ];
+        for (let i = 0; i < roadBorders.length; i++) {
+            if (polysIntersect(polyPoints, [...roadBorders[i]])) return true;
+        }
+        return false;
     }
 
     #move(delta: number) {
@@ -63,7 +82,7 @@ export default class Car extends Phaser.GameObjects.Rectangle {
             this.speed = 0;
         }
 
-        if (this.speed != 0) {
+        if (Math.abs(this.speed) > 0.1) {
             const flip = this.speed > 0 ? -1 : 1;
             if (this.controls.left) {
                 this.rotation += this.angularVel * flip * delta;
@@ -75,8 +94,5 @@ export default class Car extends Phaser.GameObjects.Rectangle {
 
         this.x += Math.sin(this.rotation) * this.speed * delta;
         this.y -= Math.cos(this.rotation) * this.speed * delta;
-
-        this.collider.position = { x: this.x, y: this.y };
-        this.collider.angle = this.rotation;
     }
 }
