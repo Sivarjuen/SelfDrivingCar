@@ -7,6 +7,7 @@ import { polysIntersect } from "./util";
 export default class Car extends Phaser.GameObjects.Rectangle {
     shape: Phaser.GameObjects.Rectangle;
 
+    isDummy = false;
     speed = 0;
     acceleration = 2;
     maxSpeed = 300;
@@ -23,25 +24,36 @@ export default class Car extends Phaser.GameObjects.Rectangle {
         y: number,
         width: number,
         height: number,
-        colour: number
+        isDummy: boolean
     ) {
-        super(scene, x, y, width, height, colour);
-        this.initColour = colour;
-        this.controls = new Controls();
-        this.sensors = scene.add.existing(new Sensor(scene, this));
+        super(scene, x, y, width, height, 0xffffff);
+
+        this.isDummy = isDummy;
+        this.controls = new Controls(isDummy);
+        if (isDummy) {
+            this.initColour = Color("orange").rgbNumber();
+            this.maxSpeed = 200;
+        } else {
+            this.sensors = scene.add.existing(new Sensor(scene, this));
+            this.initColour = Color("blue").rgbNumber();
+        }
+
+        this.fillColor = this.initColour;
     }
 
     update(delta: number, roadBorders: Segment[]) {
-        this.#move(delta);
-        const damagedThisFrame = this.#assessDamage(roadBorders);
-        if (this.damaged != damagedThisFrame) {
-            this.damaged = damagedThisFrame;
-            this.fillColor = this.damaged
-                ? Color("red").rgbNumber()
-                : this.initColour;
+        if (!this.damaged) {
+            this.#move(delta);
+            this.damaged = this.#assessDamage(roadBorders);
+            if (this.damaged) {
+                this.fillColor = this.damaged
+                    ? Color("red").rgbNumber()
+                    : this.initColour;
+                this.fillAlpha = 0.2;
+            }
         }
 
-        this.sensors.update(roadBorders);
+        if (this.sensors) this.sensors.update(roadBorders);
     }
 
     #assessDamage(roadBorders: Segment[]) {

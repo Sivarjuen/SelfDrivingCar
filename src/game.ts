@@ -8,6 +8,7 @@ const LANES = 3;
 export class Game extends Scene {
     camera: Phaser.Cameras.Scene2D.Camera;
     car: Car;
+    traffic: Car[];
     road: Road;
 
     constructor() {
@@ -26,21 +27,23 @@ export class Game extends Scene {
             )
         );
         this.car = this.add.existing(
-            new Car(
-                this,
-                this.road.getLaneCenter(1),
-                900,
-                60,
-                100,
-                Color("blue").rgbNumber()
-            )
+            new Car(this, this.road.getLaneCenter(1), 900, 60, 100, false)
         );
+
+        this.traffic = [
+            this.add.existing(
+                new Car(this, this.road.getLaneCenter(1), 700, 60, 100, true)
+            ),
+        ];
 
         this.camera.startFollow(this.car, false, 0.1);
     }
 
     update(_time: number, deltaMs: number) {
         const delta = deltaMs / 1000;
+        this.traffic.forEach((car) => {
+            car.update(delta, this.road.borders);
+        });
         this.car.update(delta, this.road.borders);
         this.camera.pan(
             this.cameras.main.width / 2,

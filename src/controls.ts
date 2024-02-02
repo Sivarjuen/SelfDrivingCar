@@ -3,9 +3,15 @@ export default class Controls {
     left = false;
     right = false;
     reverse = false;
+    isDummy = false;
 
-    constructor() {
-        this.#addKeyboardListeners();
+    constructor(isDummy: boolean) {
+        this.isDummy = isDummy;
+        if (!isDummy) {
+            this.#addKeyboardListeners();
+        } else {
+            this.forward = true;
+        }
     }
 
     #addKeyboardListeners() {
