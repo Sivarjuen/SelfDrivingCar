@@ -1,6 +1,6 @@
-# Phaser Vite Template
+# Phaser Vite TypeScript Template
 
-This is a Phaser 3 project template that uses Vite for bundling. It supports hot-reloading for quick development workflow and includes scripts to generate production-ready builds.
+This is a Phaser 3 project template that uses Vite for bundling. It supports hot-reloading for quick development workflow, includes TypeScript support and scripts to generate production-ready builds.
 
 ### Versions
 
@@ -8,6 +8,7 @@ This template has been updated for:
 
 - [Phaser 3.70.0](https://github.com/phaserjs/phaser)
 - [Vite 5.0.8](https://github.com/vitejs/vite)
+- [TypeScript 5.2.2](https://github.com/microsoft/TypeScript)
 
 ![screenshot](screenshot.png)
 
@@ -37,7 +38,8 @@ We have provided a default project structure to get you started. This is as foll
 
 - `index.html` - A basic HTML page to contain the game.
 - `src` - Contains the game source code.
-- `src/main.js` - The main entry point. This contains the game configuration and starts the game.
+- `src/main.ts` - The main **entry** point. This contains the game configuration and starts the game.
+- `src/vite-env.d.ts` - Global TypeScript declarations, provide types information.
 - `src/scenes/` - The Phaser Scenes are in this folder.
 - `public/style.css` - Some simple CSS rules to help with page layout.
 - `public/assets` - Contains the static assets used by the game.
