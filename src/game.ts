@@ -1,7 +1,7 @@
 import { Scene } from "phaser";
 import Car from "./car";
-import Color from "color";
 import Road from "./road";
+import { ControlType } from "./controls";
 
 const LANES = 3;
 
@@ -27,12 +27,26 @@ export class Game extends Scene {
             )
         );
         this.car = this.add.existing(
-            new Car(this, this.road.getLaneCenter(1), 900, 60, 100, false)
+            new Car(
+                this,
+                this.road.getLaneCenter(1),
+                900,
+                60,
+                100,
+                ControlType.AI
+            )
         );
 
         this.traffic = [
             this.add.existing(
-                new Car(this, this.road.getLaneCenter(1), 700, 60, 100, true)
+                new Car(
+                    this,
+                    this.road.getLaneCenter(1),
+                    700,
+                    60,
+                    100,
+                    ControlType.DUMMY
+                )
             ),
         ];
 
@@ -42,9 +56,9 @@ export class Game extends Scene {
     update(_time: number, deltaMs: number) {
         const delta = deltaMs / 1000;
         this.traffic.forEach((car) => {
-            car.update(delta, this.road.borders);
+            car.update(delta);
         });
-        this.car.update(delta, this.road.borders);
+        this.car.update(delta, this.road.borders, this.traffic);
         this.camera.pan(
             this.cameras.main.width / 2,
             this.car.y - this.cameras.main.height * 0.3,

@@ -20,21 +20,38 @@ export default class Sensor extends Phaser.GameObjects.Graphics {
 
         this.rays = [];
         this.readings = [];
+
+        this.depth = 1;
     }
 
-    update(roadBorders: Segment[]) {
+    update(roadBorders: Segment[], traffic: Car[]) {
         this.#castRays();
         this.readings = [];
         for (let i = 0; i < this.rays.length; i++) {
-            this.readings.push(this.#getReading(this.rays[i], roadBorders));
+            this.readings.push(
+                this.#getReading(this.rays[i], roadBorders, traffic)
+            );
         }
         this.draw();
     }
 
-    #getReading(ray: Ray, roadBorders: Segment[]) {
+    #getReading(ray: Ray, roadBorders: Segment[], traffic: Car[]) {
         let touches: IntersectionPoint[] = [];
 
         for (let i = 0; i < roadBorders.length; i++) {
+            const touch = getIntersection(ray as Segment, roadBorders[i]);
+            if (touch) touches.push(touch);
+        }
+
+        for (let i = 0; i < traffic.length; i++) {
+            const polyPoints = traffic[i].getPolyPoints();
+            for (let j = 0; j < polyPoints.length; j++) {
+                const touch = getIntersection(ray as Segment, [
+                    polyPoints[j],
+                    polyPoints[(j + 1) % polyPoints.length],
+                ]);
+                if (touch) touches.push(touch);
+            }
             const touch = getIntersection(ray as Segment, roadBorders[i]);
             if (touch) touches.push(touch);
         }

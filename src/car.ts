@@ -1,13 +1,13 @@
 import Color from "color";
-import Controls from "./controls";
+import Controls, { ControlType } from "./controls";
 import Sensor from "./sensor";
 import { Point, Segment } from "./types";
 import { polysIntersect } from "./util";
+import NeuralNetwork from "./network";
 
 export default class Car extends Phaser.GameObjects.Rectangle {
     shape: Phaser.GameObjects.Rectangle;
 
-    isDummy = false;
     speed = 0;
     acceleration = 2;
     maxSpeed = 300;
@@ -16,35 +16,39 @@ export default class Car extends Phaser.GameObjects.Rectangle {
     damaged = false;
     initColour: number;
 
+    controlType: ControlType;
     controls: Controls;
     sensors: Sensor;
+    brain: NeuralNetwork;
     constructor(
         scene: Phaser.Scene,
         x: number,
         y: number,
         width: number,
         height: number,
-        isDummy: boolean
+        controlType: ControlType
     ) {
         super(scene, x, y, width, height, 0xffffff);
 
-        this.isDummy = isDummy;
-        this.controls = new Controls(isDummy);
-        if (isDummy) {
+        this.controlType = controlType;
+        this.controls = new Controls(controlType);
+        if (controlType === ControlType.DUMMY) {
             this.initColour = Color("orange").rgbNumber();
             this.maxSpeed = 200;
         } else {
             this.sensors = scene.add.existing(new Sensor(scene, this));
+            this.brain = new NeuralNetwork([this.sensors.rayCount, 6, 4]);
+            this.depth = 2;
             this.initColour = Color("blue").rgbNumber();
         }
 
         this.fillColor = this.initColour;
     }
 
-    update(delta: number, roadBorders: Segment[]) {
+    update(delta: number, roadBorders: Segment[] = [], traffic: Car[] = []) {
         if (!this.damaged) {
             this.#move(delta);
-            this.damaged = this.#assessDamage(roadBorders);
+            this.damaged = this.#assessDamage(roadBorders, traffic);
             if (this.damaged) {
                 this.fillColor = this.damaged
                     ? Color("red").rgbNumber()
@@ -53,20 +57,43 @@ export default class Car extends Phaser.GameObjects.Rectangle {
             }
         }
 
-        if (this.sensors) this.sensors.update(roadBorders);
+        if (this.sensors) {
+            this.sensors.update(roadBorders, traffic);
+            const offsets = this.sensors.readings.map((s) =>
+                s === undefined ? 0 : 1 - s.offset
+            );
+            const outputs = NeuralNetwork.feedForward(offsets, this.brain);
+
+            if (this.controlType === ControlType.AI) {
+                this.controls.forward = outputs[0] === 1;
+                this.controls.left = outputs[1] === 1;
+                this.controls.right = outputs[2] === 1;
+                this.controls.reverse = outputs[3] === 1;
+            }
+        }
     }
 
-    #assessDamage(roadBorders: Segment[]) {
-        const polyPoints: Point[] = [
+    #assessDamage(roadBorders: Segment[], traffic: Car[]) {
+        const polyPoints = this.getPolyPoints();
+        for (let i = 0; i < roadBorders.length; i++) {
+            if (polysIntersect(polyPoints, [...roadBorders[i]])) return true;
+        }
+
+        for (let i = 0; i < traffic.length; i++) {
+            if (polysIntersect(polyPoints, traffic[i].getPolyPoints()))
+                return true;
+        }
+
+        return false;
+    }
+
+    getPolyPoints(): Point[] {
+        return [
             { x: this.getTopLeft().x!, y: this.getTopLeft().y! },
             { x: this.getTopRight().x!, y: this.getTopRight().y! },
             { x: this.getBottomRight().x!, y: this.getBottomRight().y! },
             { x: this.getBottomLeft().x!, y: this.getBottomLeft().y! },
         ];
-        for (let i = 0; i < roadBorders.length; i++) {
-            if (polysIntersect(polyPoints, [...roadBorders[i]])) return true;
-        }
-        return false;
     }
 
     #move(delta: number) {

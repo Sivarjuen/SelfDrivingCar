@@ -1,16 +1,25 @@
+export enum ControlType {
+    DUMMY,
+    KEYS,
+    AI,
+}
+
 export default class Controls {
     forward = false;
     left = false;
     right = false;
     reverse = false;
-    isDummy = false;
+    control: ControlType;
 
-    constructor(isDummy: boolean) {
-        this.isDummy = isDummy;
-        if (!isDummy) {
-            this.#addKeyboardListeners();
-        } else {
-            this.forward = true;
+    constructor(controlType: ControlType) {
+        this.control = controlType;
+        switch (controlType) {
+            case ControlType.KEYS:
+                this.#addKeyboardListeners();
+                break;
+            case ControlType.DUMMY:
+                this.forward = true;
+                break;
         }
     }
 
