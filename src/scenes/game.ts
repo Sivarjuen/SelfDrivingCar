@@ -1,7 +1,7 @@
 import { Scene } from "phaser";
-import Car from "./car";
-import Road from "./road";
-import { ControlType } from "./controls";
+import Car from "../car";
+import Road from "../road";
+import { ControlType } from "../controls";
 
 const LANES = 3;
 
@@ -12,12 +12,17 @@ export class Game extends Scene {
     road: Road;
 
     constructor() {
-        super("Game");
+        super({ key: "Game", active: true });
     }
 
     create() {
         this.camera = this.cameras.main;
+        this.camera.setSize(
+            this.sys.game.canvas.width / 3,
+            this.sys.game.canvas.height
+        );
         this.camera.setBackgroundColor(0x808080);
+
         this.road = this.add.existing(
             new Road(
                 this,

@@ -1,4 +1,5 @@
-import { Game as MainGame } from "./game";
+import { Game as MainGame } from "./scenes/game";
+import { Visualiser } from "./scenes/visualiser";
 
 import { Game, Types } from "phaser";
 
@@ -6,15 +7,12 @@ import { Game, Types } from "phaser";
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
 const config: Types.Core.GameConfig = {
     type: Phaser.AUTO,
-    width: 360,
-    height: 1080,
     parent: "game-container",
-    backgroundColor: "#028af8",
     scale: {
-        mode: Phaser.Scale.FIT,
+        mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH,
     },
-    scene: [MainGame],
+    scene: [MainGame, Visualiser],
 };
 
 export default new Game(config);
